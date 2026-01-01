@@ -1,12 +1,6 @@
 script_name("CosyTelegram")
 script_version("2.4")
---[[
-CosyTelegram - Управление скриптом из Telegram
-Оставлен только функционал Telegram управления
-v2.1 - Добавлена функция получения статистики
-v2.3 - Исправлена ошибка "cannot resume non-suspended coroutine"
-v2.4 - Добавлено автообновление с GitHub
---]]
+
 
 local TAG = ':robot: {7B68EE}[TG] {CFCFCF}CosyTelegram | {9B9B9B}'
 local c_main = '{9B9B9B}'
@@ -19,22 +13,22 @@ local encoding = require 'encoding'
 encoding.default = 'CP1251'
 u8 = encoding.UTF8
 
--- Переменные скрипта
+-- ГЏГҐГ°ГҐГ¬ГҐГ­Г­Г»ГҐ Г±ГЄГ°ГЁГЇГІГ 
 local main_window_state = false
 local terminate_session = nil
 local active = false
 local updateid = nil
 local myid = nil
 local myNick = nil
-local CheckStat = false -- Флаг для запроса статистики
+local CheckStat = false -- Г”Г«Г ГЈ Г¤Г«Гї Г§Г ГЇГ°Г®Г±Г  Г±ГІГ ГІГЁГ±ГІГЁГЄГЁ
 
--- Переменные для автообновления
-local auto_update_enabled = false -- Включена ли автообновление
-local repo_user = '' -- Пользователь репозитория GitHub
-local repo_name = 'CosyTelegram' -- Имя репозитория GitHub
-local current_version = script_version -- Текущая версия скрипта
+-- ГЏГҐГ°ГҐГ¬ГҐГ­Г­Г»ГҐ Г¤Г«Гї Г ГўГІГ®Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГї
+local auto_update_enabled = false -- Г‚ГЄГ«ГѕГ·ГҐГ­Г  Г«ГЁ Г ГўГІГ®Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ
+local repo_user = '' -- ГЏГ®Г«ГјГ§Г®ГўГ ГІГҐГ«Гј Г°ГҐГЇГ®Г§ГЁГІГ®Г°ГЁГї GitHub
+local repo_name = 'CosyTelegram' -- Г€Г¬Гї Г°ГҐГЇГ®Г§ГЁГІГ®Г°ГЁГї GitHub
+local current_version = script_version -- Г’ГҐГЄГіГ№Г Гї ГўГҐГ°Г±ГЁГї Г±ГЄГ°ГЁГЇГІГ 
 
--- JSON utilities - безопасная загрузка
+-- JSON utilities - ГЎГҐГ§Г®ГЇГ Г±Г­Г Гї Г§Г ГЈГ°ГіГ§ГЄГ 
 local json = nil
 local success, json_lib = pcall(require, 'dkjson')
 if success then
@@ -79,15 +73,15 @@ function decodeJson(jsonString)
     if success and result then return result else return nil end
 end
 
--- Конфигурация
+-- ГЉГ®Г­ГґГЁГЈГіГ°Г Г¶ГЁГї
 local mainIni = inicfg.load({
     settings = {
         scriptName = u8'ctg',
         selected_item = 0,
-        -- Настройки автообновления
-        auto_update = true,  -- Включить автообновление по умолчанию
-        repo_user = '',   -- Пользователь репозитория GitHub (оставьте пустым для примера)
-        repo_name = 'CosyTelegram'  -- Имя репозитория
+        -- ГЌГ Г±ГІГ°Г®Г©ГЄГЁ Г ГўГІГ®Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГї
+        auto_update = true,  -- Г‚ГЄГ«ГѕГ·ГЁГІГј Г ГўГІГ®Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ ГЇГ® ГіГ¬Г®Г«Г·Г Г­ГЁГѕ
+        repo_user = '',   -- ГЏГ®Г«ГјГ§Г®ГўГ ГІГҐГ«Гј Г°ГҐГЇГ®Г§ГЁГІГ®Г°ГЁГї GitHub (Г®Г±ГІГ ГўГјГІГҐ ГЇГіГ±ГІГ»Г¬ Г¤Г«Гї ГЇГ°ГЁГ¬ГҐГ°Г )
+        repo_name = 'CosyTelegram'  -- Г€Г¬Гї Г°ГҐГЇГ®Г§ГЁГІГ®Г°ГЁГї
     },
     telegram = {
         chat_id = '-1003122040330',
@@ -99,7 +93,7 @@ if not doesFileExist('moonloader/config/CosyTelegram.ini') then
     inicfg.save(mainIni, 'CosyTelegram.ini')
 end
 
--- Функции для URL кодирования
+-- Г”ГіГ­ГЄГ¶ГЁГЁ Г¤Г«Гї URL ГЄГ®Г¤ГЁГ°Г®ГўГ Г­ГЁГї
 function encodeUrl(str)
     if not str then return "" end
     str = str:gsub(' ', '%+')
@@ -118,7 +112,7 @@ function char_to_hex(str)
     return string.format("%%%02X", string.byte(str))
 end
 
--- Функция экранирования для MarkdownV2
+-- Г”ГіГ­ГЄГ¶ГЁГї ГЅГЄГ°Г Г­ГЁГ°Г®ГўГ Г­ГЁГї Г¤Г«Гї MarkdownV2
 function MarkdownV2(text)
     if not text or type(text) ~= "string" then return text end
     local escape_chars = {'_', '*', '`', '[', ']', '(', ')', '~', '>', '<', '#', '+', '-', '=', '|', '{', '}', '.', '!'}
@@ -130,7 +124,7 @@ function MarkdownV2(text)
     return text
 end
 
--- Асинхронные HTTP запросы
+-- ГЂГ±ГЁГ­ГµГ°Г®Г­Г­Г»ГҐ HTTP Г§Г ГЇГ°Г®Г±Г»
 function requestRunner()
     return effil.thread(function(u, a)
         local https = require 'ssl.https'
@@ -174,10 +168,10 @@ function async_http_request(url, args, resolve, reject)
 end
 
 -- ===============================
--- АВТООБНОВЛЕНИЕ С GITHUB
+-- ГЂГ‚Г’ГЋГЋГЃГЌГЋГ‚Г‹Г…ГЌГ€Г… Г‘ GITHUB
 -- ===============================
 
--- Функция сравнения версий (semver)
+-- Г”ГіГ­ГЄГ¶ГЁГї Г±Г°Г ГўГ­ГҐГ­ГЁГї ГўГҐГ°Г±ГЁГ© (semver)
 local function compareVersions(v1, v2)
     local v1_parts = {}
     local v2_parts = {}
@@ -199,10 +193,10 @@ local function compareVersions(v1, v2)
     return 0
 end
 
--- Функция проверки обновлений
+-- Г”ГіГ­ГЄГ¶ГЁГї ГЇГ°Г®ГўГҐГ°ГЄГЁ Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГ©
 local function checkForUpdates()
     if not auto_update_enabled or repo_user == '' or repo_name == '' then
-        msg_telegram("Автообновление отключено или не настроен репозиторий")
+        msg_telegram("ГЂГўГІГ®Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ Г®ГІГЄГ«ГѕГ·ГҐГ­Г® ГЁГ«ГЁ Г­ГҐ Г­Г Г±ГІГ°Г®ГҐГ­ Г°ГҐГЇГ®Г§ГЁГІГ®Г°ГЁГ©")
         return
     end
     
@@ -211,102 +205,102 @@ local function checkForUpdates()
     
     async_http_request(url, '', function(response)
         if not response or response == '' then
-            msg_telegram("Не удалось получить информацию о версии с GitHub")
+            msg_telegram("ГЌГҐ ГіГ¤Г Г«Г®Г±Гј ГЇГ®Г«ГіГ·ГЁГІГј ГЁГ­ГґГ®Г°Г¬Г Г¶ГЁГѕ Г® ГўГҐГ°Г±ГЁГЁ Г± GitHub")
             return
         end
         
         local ok, data = pcall(decodeJson, response)
         if not ok or not data or not data.tag_name then
-            msg_telegram("Не удалось разобрать ответ от GitHub")
+            msg_telegram("ГЌГҐ ГіГ¤Г Г«Г®Г±Гј Г°Г Г§Г®ГЎГ°Г ГІГј Г®ГІГўГҐГІ Г®ГІ GitHub")
             return
         end
         
         local latest_version = data.tag_name:gsub('v', '')
         local current_ver = current_version:gsub('v', '')
         
-        msg_telegram("Текущая версия: " .. current_version .. ", актуальная на GitHub: " .. latest_version)
+        msg_telegram("Г’ГҐГЄГіГ№Г Гї ГўГҐГ°Г±ГЁГї: " .. current_version .. ", Г ГЄГІГіГ Г«ГјГ­Г Гї Г­Г  GitHub: " .. latest_version)
         
         if compareVersions(current_ver, latest_version) < 0 then
-            msg_telegram("Доступно обновление! Версия: " .. latest_version)
+            msg_telegram("Г„Г®Г±ГІГіГЇГ­Г® Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ! Г‚ГҐГ°Г±ГЁГї: " .. latest_version)
             
             local update_message = string.format(
-                "?? Доступно обновление для CosyTelegram!\n\n" ..
-                "Версия: %s\n" ..
-                "Текущая: %s\n" ..
-                "Обновить?\n" ..
-                "Через 10 сек начнется скачивание...",
+                "?? Г„Г®Г±ГІГіГЇГ­Г® Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ Г¤Г«Гї CosyTelegram!\n\n" ..
+                "Г‚ГҐГ°Г±ГЁГї: %s\n" ..
+                "Г’ГҐГЄГіГ№Г Гї: %s\n" ..
+                "ГЋГЎГ­Г®ГўГЁГІГј?\n" ..
+                "Г—ГҐГ°ГҐГ§ 10 Г±ГҐГЄ Г­Г Г·Г­ГҐГІГ±Гї Г±ГЄГ Г·ГЁГўГ Г­ГЁГҐ...",
                 latest_version, current_version
             )
             
             sendTelegramNotification(MarkdownV2(update_message))
             
-            -- Запускаем скачивание с задержкой
+            -- Г‡Г ГЇГіГ±ГЄГ ГҐГ¬ Г±ГЄГ Г·ГЁГўГ Г­ГЁГҐ Г± Г§Г Г¤ГҐГ°Г¦ГЄГ®Г©
             lua_thread.create(function()
-                wait(10000) -- 10 секунд
+                wait(10000) -- 10 Г±ГҐГЄГіГ­Г¤
                 downloadUpdate(data)
             end)
         elseif compareVersions(current_ver, latest_version) > 0 then
-            msg_telegram("У вас установлена новее версия: " .. latest_version)
+            msg_telegram("Г“ ГўГ Г± ГіГ±ГІГ Г­Г®ГўГ«ГҐГ­Г  Г­Г®ГўГҐГҐ ГўГҐГ°Г±ГЁГї: " .. latest_version)
         else
-            msg_telegram("У вас установлена актуальная версия")
+            msg_telegram("Г“ ГўГ Г± ГіГ±ГІГ Г­Г®ГўГ«ГҐГ­Г  Г ГЄГІГіГ Г«ГјГ­Г Гї ГўГҐГ°Г±ГЁГї")
         end
     end)
 end
 
--- Функция скачивания обновления
+-- Г”ГіГ­ГЄГ¶ГЁГї Г±ГЄГ Г·ГЁГўГ Г­ГЁГї Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГї
 local function downloadUpdate(release_data)
     if not release_data or not release_data.html_url then
-        msg_telegram("Не удалось найти ссылку на скачивание")
+        msg_telegram("ГЌГҐ ГіГ¤Г Г«Г®Г±Гј Г­Г Г©ГІГЁ Г±Г±Г»Г«ГЄГі Г­Г  Г±ГЄГ Г·ГЁГўГ Г­ГЁГҐ")
         return
     end
     
     local download_url = release_data.html_url
     
-    msg_telegram("Скачивание обновления с GitHub...")
+    msg_telegram("Г‘ГЄГ Г·ГЁГўГ Г­ГЁГҐ Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГї Г± GitHub...")
     
     async_http_request(download_url, '', function(response)
         if not response or response == '' then
-            msg_telegram("Не удалось скачать обновление")
+            msg_telegram("ГЌГҐ ГіГ¤Г Г«Г®Г±Гј Г±ГЄГ Г·Г ГІГј Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ")
             return
         end
         
         local script_path = thisScript().path
         local update_path = script_path .. ".update"
         
-        -- Сохраняем скачанный файл
+        -- Г‘Г®ГµГ°Г Г­ГїГҐГ¬ Г±ГЄГ Г·Г Г­Г­Г»Г© ГґГ Г©Г«
         local file = io.open(update_path, "wb")
         if file then
             file:write(response)
             file:close()
             
-            -- Запускаем обновление
+            -- Г‡Г ГЇГіГ±ГЄГ ГҐГ¬ Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ
             updateScript(update_path)
         else
-            msg_telegram("Не удалось создать файл обновления")
+            msg_telegram("ГЌГҐ ГіГ¤Г Г«Г®Г±Гј Г±Г®Г§Г¤Г ГІГј ГґГ Г©Г« Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГї")
         end
     end)
 end
 
--- Функция обновления скрипта
+-- Г”ГіГ­ГЄГ¶ГЁГї Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГї Г±ГЄГ°ГЁГЇГІГ 
 local function updateScript(update_file)
-    msg_telegram("Установка обновления...")
+    msg_telegram("Г“Г±ГІГ Г­Г®ГўГЄГ  Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГї...")
     
     local script_path = thisScript().path
     local backup_path = script_path .. ".backup"
     
-    -- Создаем бекап текущей версии
+    -- Г‘Г®Г§Г¤Г ГҐГ¬ ГЎГҐГЄГ ГЇ ГІГҐГЄГіГ№ГҐГ© ГўГҐГ°Г±ГЁГЁ
     os.remove(backup_path)
     os.rename(script_path, backup_path)
     
-    -- Копируем обновление
+    -- ГЉГ®ГЇГЁГ°ГіГҐГ¬ Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ
     os.copy(update_file, script_path)
     
-    -- Удаляем временный файл
+    -- Г“Г¤Г Г«ГїГҐГ¬ ГўГ°ГҐГ¬ГҐГ­Г­Г»Г© ГґГ Г©Г«
     os.remove(update_file)
     os.remove(backup_path)
     
-    msg_telegram("Обновление установлено!")
-    msg_telegram("Перезагрузка скрипта через 3 секунды...")
+    msg_telegram("ГЋГЎГ­Г®ГўГ«ГҐГ­ГЁГҐ ГіГ±ГІГ Г­Г®ГўГ«ГҐГ­Г®!")
+    msg_telegram("ГЏГҐГ°ГҐГ§Г ГЈГ°ГіГ§ГЄГ  Г±ГЄГ°ГЁГЇГІГ  Г·ГҐГ°ГҐГ§ 3 Г±ГҐГЄГіГ­Г¤Г»...")
     
     lua_thread.create(function()
         wait(3000)
@@ -314,7 +308,7 @@ local function updateScript(update_file)
     end)
 end
 
--- Получение информации об игроке
+-- ГЏГ®Г«ГіГ·ГҐГ­ГЁГҐ ГЁГ­ГґГ®Г°Г¬Г Г¶ГЁГЁ Г®ГЎ ГЁГЈГ°Г®ГЄГҐ
 function getMyInfo()
     local res, player_id = sampGetPlayerIdByCharHandle(PLAYER_PED)
     if res then
@@ -323,7 +317,7 @@ function getMyInfo()
     end
 end
 
--- Отправка уведомления в Telegram
+-- ГЋГІГЇГ°Г ГўГЄГ  ГіГўГҐГ¤Г®Г¬Г«ГҐГ­ГЁГї Гў Telegram
 function sendTelegramNotification(msg)
     if not msg then return end
     async_http_request(
@@ -334,13 +328,13 @@ function sendTelegramNotification(msg)
         '',
         function(result)
             if not result then
-                msg_telegram("[Ошибка] Не удалось отправить уведомление")
+                msg_telegram("[ГЋГёГЁГЎГЄГ ] ГЌГҐ ГіГ¤Г Г«Г®Г±Гј Г®ГІГЇГ°Г ГўГЁГІГј ГіГўГҐГ¤Г®Г¬Г«ГҐГ­ГЁГҐ")
             end
         end
     )
 end
 
--- Отправка уведомления с кнопками
+-- ГЋГІГЇГ°Г ГўГЄГ  ГіГўГҐГ¤Г®Г¬Г«ГҐГ­ГЁГї Г± ГЄГ­Г®ГЇГЄГ Г¬ГЁ
 function sendTelegramNotificationWithButtons(msg, buttons)
     if not msg or not buttons then return end
     local url = 'https://api.telegram.org/bot'.. mainIni.telegram.token ..
@@ -351,34 +345,34 @@ function sendTelegramNotificationWithButtons(msg, buttons)
 
     async_http_request(url, '', function(result)
         if not result then
-            print("Ошибка при отправке сообщения в Telegram")
+            print("ГЋГёГЁГЎГЄГ  ГЇГ°ГЁ Г®ГІГЇГ°Г ГўГЄГҐ Г±Г®Г®ГЎГ№ГҐГ­ГЁГї Гў Telegram")
             return
         end
 
         local ok, response = pcall(decodeJson, result)
         if ok and response then
             if not response.ok then
-                print("Ошибка Telegram API:", response.description)
+                print("ГЋГёГЁГЎГЄГ  Telegram API:", response.description)
             end
         else
-            print("Не удалось разобрать ответ от Telegram")
+            print("ГЌГҐ ГіГ¤Г Г«Г®Г±Гј Г°Г Г§Г®ГЎГ°Г ГІГј Г®ГІГўГҐГІ Г®ГІ Telegram")
         end
     end)
 end
 
--- Персональная панель управления
+-- ГЏГҐГ°Г±Г®Г­Г Г«ГјГ­Г Гї ГЇГ Г­ГҐГ«Гј ГіГЇГ°Г ГўГ«ГҐГ­ГЁГї
 function TGPersonalPanel()
     getMyInfo()
 
-    local msg_text = MarkdownV2(myNick .. '[' .. myid .. '] На связи.')
+    local msg_text = MarkdownV2(myNick .. '[' .. myid .. '] ГЌГ  Г±ГўГїГ§ГЁ.')
 
     local reply_markup = {
         inline_keyboard = {
             {
-                { text = "Оффнуться", callback_data = "QQButton" },
+                { text = "ГЋГґГґГ­ГіГІГјГ±Гї", callback_data = "QQButton" },
                 { text = "rec 5m", callback_data = "Rec5Button" },
                 { text = "rec 10m", callback_data = "Rec10Button" },
-                { text = "'Ау'", callback_data = "SendAyButton" },
+                { text = "'ГЂГі'", callback_data = "SendAyButton" },
                 { text = "get stat", callback_data = "StatButton" }
             }
         }
@@ -386,12 +380,12 @@ function TGPersonalPanel()
     sendTelegramNotificationWithButtons(encodeUrl(msg_text), reply_markup)
 end
 
--- Уведомление об упоминании
+-- Г“ГўГҐГ¤Г®Г¬Г«ГҐГ­ГЁГҐ Г®ГЎ ГіГЇГ®Г¬ГЁГ­Г Г­ГЁГЁ
 function TGNotifyMention(msg_text, trigger)
     getMyInfo()
 
     local clean_msg = msg_text:gsub('{......}', '')
-    clean_msg = 'Требуется кассир '.. myNick ..'\n'.. clean_msg
+    clean_msg = 'Г’Г°ГҐГЎГіГҐГІГ±Гї ГЄГ Г±Г±ГЁГ° '.. myNick ..'\n'.. clean_msg
 
     clean_msg = MarkdownV2(clean_msg)
 
@@ -400,9 +394,9 @@ function TGNotifyMention(msg_text, trigger)
     local reply_markup = {
         inline_keyboard = {
             {
-                { text = "Оффнуться", callback_data = "QQButton" },
-                { text = "Выезд из штата", callback_data = "MessageAndQQButton" },
-                { text = "'Ау'", callback_data = "SendAyButton" },
+                { text = "ГЋГґГґГ­ГіГІГјГ±Гї", callback_data = "QQButton" },
+                { text = "Г‚Г»ГҐГ§Г¤ ГЁГ§ ГёГІГ ГІГ ", callback_data = "MessageAndQQButton" },
+                { text = "'ГЂГі'", callback_data = "SendAyButton" },
                 { text = "stap", callback_data = "StapButton" }
             }
         }
@@ -411,7 +405,7 @@ function TGNotifyMention(msg_text, trigger)
     sendTelegramNotificationWithButtons(encodeUrl(clean_msg), reply_markup)
 end
 
--- Получение последнего обновления
+-- ГЏГ®Г«ГіГ·ГҐГ­ГЁГҐ ГЇГ®Г±Г«ГҐГ¤Г­ГҐГЈГ® Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГї
 function getLastUpdate()
     async_http_request(
         'https://api.telegram.org/bot'.. mainIni.telegram.token ..
@@ -444,7 +438,7 @@ function getLastUpdate()
     )
 end
 
--- Обработка сообщений из Telegram
+-- ГЋГЎГ°Г ГЎГ®ГІГЄГ  Г±Г®Г®ГЎГ№ГҐГ­ГЁГ© ГЁГ§ Telegram
 function processing_telegram_messages(result)
     if not result then return end
     local ok, proc_table = pcall(decodeJson, result)
@@ -456,16 +450,16 @@ function processing_telegram_messages(result)
             if res_table and res_table.update_id ~= updateid then
                 updateid = res_table.update_id
 
-                -- Обработка текстовых сообщений
+                -- ГЋГЎГ°Г ГЎГ®ГІГЄГ  ГІГҐГЄГ±ГІГ®ГўГ»Гµ Г±Г®Г®ГЎГ№ГҐГ­ГЁГ©
                 if res_table.message then
                     local message_from_user = res_table.message.text
                     if message_from_user then
                         local text = u8:decode(message_from_user) .. ' '
 
-                        -- Команда для получения панели
+                        -- ГЉГ®Г¬Г Г­Г¤Г  Г¤Г«Гї ГЇГ®Г«ГіГ·ГҐГ­ГЁГї ГЇГ Г­ГҐГ«ГЁ
                         if text:match('^all') then
                             TGPersonalPanel()
-                        -- Команда для выполнения команд в чате
+                        -- ГЉГ®Г¬Г Г­Г¤Г  Г¤Г«Гї ГўГ»ГЇГ®Г«Г­ГҐГ­ГЁГї ГЄГ®Г¬Г Г­Г¤ Гў Г·Г ГІГҐ
                         elseif text:find("^#.+, .+") then
                             local who, command = string.match(text, "^#(.+), (.+)")
                             getMyInfo()
@@ -473,14 +467,14 @@ function processing_telegram_messages(result)
                                 lua_thread.create(function()
                                     wait(200)
                                     sampProcessChatInput(command)
-                                    sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. '] отправил '.. command))
+                                    sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. '] Г®ГІГЇГ°Г ГўГЁГ« '.. command))
                                 end)
                             else
-                                sendTelegramNotification(MarkdownV2('Ошибка: Не могу выполнить команду для "' .. who .. '". Проверьте ID или ник.'))
+                                sendTelegramNotification(MarkdownV2('ГЋГёГЁГЎГЄГ : ГЌГҐ Г¬Г®ГЈГі ГўГ»ГЇГ®Г«Г­ГЁГІГј ГЄГ®Г¬Г Г­Г¤Гі Г¤Г«Гї "' .. who .. '". ГЏГ°Г®ГўГҐГ°ГјГІГҐ ID ГЁГ«ГЁ Г­ГЁГЄ.'))
                             end
                         end
                     end
-                -- Обработка нажатий на кнопки
+                -- ГЋГЎГ°Г ГЎГ®ГІГЄГ  Г­Г Г¦Г ГІГЁГ© Г­Г  ГЄГ­Г®ГЇГЄГЁ
                 elseif res_table.callback_query then
                     getMyInfo()
                     if res_table.callback_query.message and
@@ -489,48 +483,48 @@ function processing_telegram_messages(result)
                         local callback_data = res_table.callback_query.data
 
                         if callback_data == "QQButton" then
-                            -- Оффнуться
+                            -- ГЋГґГґГ­ГіГІГјГ±Гї
                             raknetEmulPacketReceiveBitStream(PACKET_DISCONNECTION_NOTIFICATION, raknetNewBitStream())
                             raknetDeleteBitStream(raknetNewBitStream())
-                            sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. '] вышел из игры.'))
+                            sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. '] ГўГ»ГёГҐГ« ГЁГ§ ГЁГЈГ°Г».'))
 
                         elseif callback_data == "MessageAndQQButton" then
-                            -- Сообщение в рацию и оффнуться
+                            -- Г‘Г®Г®ГЎГ№ГҐГ­ГЁГҐ Гў Г°Г Г¶ГЁГѕ ГЁ Г®ГґГґГ­ГіГІГјГ±Гї
                             lua_thread.create(function()
-                                sampSendChat('/r Извините, но я уже уезжаю из штата')
+                                sampSendChat('/r Г€Г§ГўГЁГ­ГЁГІГҐ, Г­Г® Гї ГіГ¦ГҐ ГіГҐГ§Г¦Г Гѕ ГЁГ§ ГёГІГ ГІГ ')
                                 wait(7000)
                                 raknetEmulPacketReceiveBitStream(PACKET_DISCONNECTION_NOTIFICATION, raknetNewBitStream())
                                 raknetDeleteBitStream(raknetNewBitStream())
-                                sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. '] отправил сообщение об оффе.\nВы вышли из игры.'))
+                                sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. '] Г®ГІГЇГ°Г ГўГЁГ« Г±Г®Г®ГЎГ№ГҐГ­ГЁГҐ Г®ГЎ Г®ГґГґГҐ.\nГ‚Г» ГўГ»ГёГ«ГЁ ГЁГ§ ГЁГЈГ°Г».'))
                             end)
 
                         elseif callback_data == "SendAyButton" then
-                            -- Отправить "Ау" в рацию
-                            sampSendChat("/r Ау")
-                            sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. "] отправлил сообщение 'Ау' в рацию."))
+                            -- ГЋГІГЇГ°Г ГўГЁГІГј "ГЂГі" Гў Г°Г Г¶ГЁГѕ
+                            sampSendChat("/r ГЂГі")
+                            sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. "] Г®ГІГЇГ°Г ГўГ«ГЁГ« Г±Г®Г®ГЎГ№ГҐГ­ГЁГҐ 'ГЂГі' Гў Г°Г Г¶ГЁГѕ."))
 
                         elseif callback_data == "StapButton" then
-                            -- Отмена выхода
+                            -- ГЋГІГ¬ГҐГ­Г  ГўГ»ГµГ®Г¤Г 
                             if terminate_session and terminate_session:status() == 'yielded' then
                                 terminate_session:terminate()
                                 active = false
-                                msg('Telegram | Галя, отмена!!')
-                                sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. "] передумал выходить."))
+                                msg('Telegram | ГѓГ Г«Гї, Г®ГІГ¬ГҐГ­Г !!')
+                                sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. "] ГЇГҐГ°ГҐГ¤ГіГ¬Г Г« ГўГ»ГµГ®Г¤ГЁГІГј."))
                             end
 
                         elseif callback_data == "Rec5Button" then
-                            -- Реконнект 5 минут
+                            -- ГђГҐГЄГ®Г­Г­ГҐГЄГІ 5 Г¬ГЁГ­ГіГІ
                             rec(300000)
 
                         elseif callback_data == "Rec10Button" then
-                            -- Реконнект 10 минут
+                            -- ГђГҐГЄГ®Г­Г­ГҐГЄГІ 10 Г¬ГЁГ­ГіГІ
                             rec(600000)
 
                         elseif callback_data == "StatButton" then
-                            -- Получить статистику
+                            -- ГЏГ®Г«ГіГ·ГЁГІГј Г±ГІГ ГІГЁГ±ГІГЁГЄГі
                             CheckStat = true
                             sampSendChat('/stats')
-                            sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. '] запросил статистику.'))
+                            sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. '] Г§Г ГЇГ°Г®Г±ГЁГ« Г±ГІГ ГІГЁГ±ГІГЁГЄГі.'))
                         end
                     end
                 end
@@ -539,7 +533,7 @@ function processing_telegram_messages(result)
     end
 end
 
--- Получение обновлений от Telegram
+-- ГЏГ®Г«ГіГ·ГҐГ­ГЁГҐ Г®ГЎГ­Г®ГўГ«ГҐГ­ГЁГ© Г®ГІ Telegram
 function get_telegram_updates()
     while not updateid do wait(1) end
     local reject = function() end
@@ -548,20 +542,20 @@ function get_telegram_updates()
         local url = 'https://api.telegram.org/bot'.. mainIni.telegram.token ..
               '/getUpdates?chat_id='.. mainIni.telegram.chat_id ..
               '&offset=-1'
-        local runner = requestRunner()  -- Создаем новый runner для каждого запроса
+        local runner = requestRunner()  -- Г‘Г®Г§Г¤Г ГҐГ¬ Г­Г®ГўГ»Г© runner Г¤Г«Гї ГЄГ Г¦Г¤Г®ГЈГ® Г§Г ГЇГ°Г®Г±Г 
         threadHandle(runner, url, args, processing_telegram_messages, reject)
         wait(500)
     end
 end
 
--- Реконнект с таймером
+-- ГђГҐГЄГ®Г­Г­ГҐГЄГІ Г± ГІГ Г©Г¬ГҐГ°Г®Г¬
 function rec(timee)
     if not timee or timee <= 0 then
-        msg_telegram("Ошибка: Некорректное время для реконнекта")
+        msg_telegram("ГЋГёГЁГЎГЄГ : ГЌГҐГЄГ®Г°Г°ГҐГЄГІГ­Г®ГҐ ГўГ°ГҐГ¬Гї Г¤Г«Гї Г°ГҐГЄГ®Г­Г­ГҐГЄГІГ ")
         return
     end
     lua_thread.create(function()
-        msg_telegram("Отключаемся. Реконнект через " .. (timee/1000) .. " сек.")
+        msg_telegram("ГЋГІГЄГ«ГѕГ·Г ГҐГ¬Г±Гї. ГђГҐГЄГ®Г­Г­ГҐГЄГІ Г·ГҐГ°ГҐГ§ " .. (timee/1000) .. " Г±ГҐГЄ.")
         raknetEmulPacketReceiveBitStream(PACKET_DISCONNECTION_NOTIFICATION, raknetNewBitStream())
         raknetDeleteBitStream(raknetNewBitStream())
         wait(timee)
@@ -570,7 +564,7 @@ function rec(timee)
     end)
 end
 
--- Вспомогательная функция для сообщений
+-- Г‚Г±ГЇГ®Г¬Г®ГЈГ ГІГҐГ«ГјГ­Г Гї ГґГіГ­ГЄГ¶ГЁГї Г¤Г«Гї Г±Г®Г®ГЎГ№ГҐГ­ГЁГ©
 function msg(text)
     if text then
         sampAddChatMessage(TAG .. '' .. text, -1)
@@ -583,31 +577,31 @@ function msg_telegram(text)
     end
 end
 
--- Обработчик диалогов для перехвата статистики
+-- ГЋГЎГ°Г ГЎГ®ГІГ·ГЁГЄ Г¤ГЁГ Г«Г®ГЈГ®Гў Г¤Г«Гї ГЇГҐГ°ГҐГµГўГ ГІГ  Г±ГІГ ГІГЁГ±ГІГЁГЄГЁ
 function samp.onShowDialog(did, style, title, b1, b2, text)
-    -- Обработка запроса статистики
+    -- ГЋГЎГ°Г ГЎГ®ГІГЄГ  Г§Г ГЇГ°Г®Г±Г  Г±ГІГ ГІГЁГ±ГІГЁГЄГЁ
     if CheckStat and title then
-        -- Отладка: показываем информацию о диалоге
-        msg_telegram("Диалог: " .. (title or "nil") .. ", CheckStat: " .. tostring(CheckStat))
+        -- ГЋГІГ«Г Г¤ГЄГ : ГЇГ®ГЄГ Г§Г»ГўГ ГҐГ¬ ГЁГ­ГґГ®Г°Г¬Г Г¶ГЁГѕ Г® Г¤ГЁГ Г«Г®ГЈГҐ
+        msg_telegram("Г„ГЁГ Г«Г®ГЈ: " .. (title or "nil") .. ", CheckStat: " .. tostring(CheckStat))
 
-        -- Убираем цвета SA-MP и отправляем в Telegram
+        -- Г“ГЎГЁГ°Г ГҐГ¬ Г¶ГўГҐГІГ  SA-MP ГЁ Г®ГІГЇГ°Г ГўГ«ГїГҐГ¬ Гў Telegram
         if text and text ~= '' then
-            -- Удаляем цвета SA-MP
+            -- Г“Г¤Г Г«ГїГҐГ¬ Г¶ГўГҐГІГ  SA-MP
             local clean_text = text:gsub('{......}', '')
 
-            -- Пропускаем пустые сообщения
+            -- ГЏГ°Г®ГЇГіГ±ГЄГ ГҐГ¬ ГЇГіГ±ГІГ»ГҐ Г±Г®Г®ГЎГ№ГҐГ­ГЁГї
             if clean_text:gsub('%s', '') ~= '' then
-                local formatted_text = "?? *" .. MarkdownV2("Статистика") .. "*\n\n"
+                local formatted_text = "?? *" .. MarkdownV2("Г‘ГІГ ГІГЁГ±ГІГЁГЄГ ") .. "*\n\n"
                 formatted_text = formatted_text .. MarkdownV2(clean_text)
 
-                -- Отправляем в Telegram
+                -- ГЋГІГЇГ°Г ГўГ«ГїГҐГ¬ Гў Telegram
                 sendTelegramNotification(formatted_text)
-                msg_telegram("Статистика отправлена в Telegram")
+                msg_telegram("Г‘ГІГ ГІГЁГ±ГІГЁГЄГ  Г®ГІГЇГ°Г ГўГ«ГҐГ­Г  Гў Telegram")
             else
-                msg_telegram("Статистика пуста, не отправляем")
+                msg_telegram("Г‘ГІГ ГІГЁГ±ГІГЁГЄГ  ГЇГіГ±ГІГ , Г­ГҐ Г®ГІГЇГ°Г ГўГ«ГїГҐГ¬")
             end
         else
-            msg_telegram("Статистика пуста (text = nil), не отправляем")
+            msg_telegram("Г‘ГІГ ГІГЁГ±ГІГЁГЄГ  ГЇГіГ±ГІГ  (text = nil), Г­ГҐ Г®ГІГЇГ°Г ГўГ«ГїГҐГ¬")
         end
 
         CheckStat = false
@@ -616,7 +610,7 @@ function samp.onShowDialog(did, style, title, b1, b2, text)
     end
 end
 
--- Основная функция
+-- ГЋГ±Г­Г®ГўГ­Г Гї ГґГіГ­ГЄГ¶ГЁГї
 function main()
     if not isSampLoaded() or not isSampfuncsLoaded() then return end
     while not isSampAvailable() do wait(100) end
@@ -625,18 +619,18 @@ function main()
         wait(0)
     until sampIsLocalPlayerSpawned()
 
-    -- Проверка настроек Telegram
+    -- ГЏГ°Г®ГўГҐГ°ГЄГ  Г­Г Г±ГІГ°Г®ГҐГЄ Telegram
     if not mainIni.telegram.token or mainIni.telegram.token == '' or
-       mainIni.telegram.token == 'ВАШ_ТОКЕН_БОТА' then
-        msg('{FF0000}[ОШИБКА]{FFFFFF} Не настроен токен бота!')
-        msg('Отредактируйте moonloader/config/CosyTelegram.ini')
+       mainIni.telegram.token == 'Г‚ГЂГ_Г’ГЋГЉГ…ГЌ_ГЃГЋГ’ГЂ' then
+        msg('{FF0000}[ГЋГГ€ГЃГЉГЂ]{FFFFFF} ГЌГҐ Г­Г Г±ГІГ°Г®ГҐГ­ ГІГ®ГЄГҐГ­ ГЎГ®ГІГ !')
+        msg('ГЋГІГ°ГҐГ¤Г ГЄГІГЁГ°ГіГ©ГІГҐ moonloader/config/CosyTelegram.ini')
         return
     end
 
     if not mainIni.telegram.chat_id or mainIni.telegram.chat_id == '' or
-       mainIni.telegram.chat_id == 'ВАШ_CHAT_ID' then
-        msg('{FF0000}[ОШИБКА]{FFFFFF} Не настроен chat_id!')
-        msg('Отредактируйте moonloader/config/CosyTelegram.ini')
+       mainIni.telegram.chat_id == 'Г‚ГЂГ_CHAT_ID' then
+        msg('{FF0000}[ГЋГГ€ГЃГЉГЂ]{FFFFFF} ГЌГҐ Г­Г Г±ГІГ°Г®ГҐГ­ chat_id!')
+        msg('ГЋГІГ°ГҐГ¤Г ГЄГІГЁГ°ГіГ©ГІГҐ moonloader/config/CosyTelegram.ini')
         return
     end
 
@@ -644,25 +638,25 @@ function main()
     getLastUpdate()
 
     -- ===============================
-    -- ПРОВЕРКА ОБНОВЛЕНИЙ С GITHUB
+    -- ГЏГђГЋГ‚Г…ГђГЉГЂ ГЋГЃГЌГЋГ‚Г‹Г…ГЌГ€Г‰ Г‘ GITHUB
     -- ===============================
     checkForUpdates()
 
-    -- Регистрация команд
+    -- ГђГҐГЈГЁГ±ГІГ°Г Г¶ГЁГї ГЄГ®Г¬Г Г­Г¤
     sampRegisterChatCommand('removeconfig', function()
         os.remove('moonloader\\config\\CosyTelegram.ini')
         thisScript():reload()
-        msg('Конфиг скрипта сброшен!')
+        msg('ГЉГ®Г­ГґГЁГЈ Г±ГЄГ°ГЁГЇГІГ  Г±ГЎГ°Г®ГёГҐГ­!')
     end)
 
     sampRegisterChatCommand('stap',function()
         if terminate_session and terminate_session:status() == 'yielded' then
             terminate_session:terminate()
             active = false
-            msg('Telegram | Галя, отмена!!')
-            sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. "] передумал выходить."))
+            msg('Telegram | ГѓГ Г«Гї, Г®ГІГ¬ГҐГ­Г !!')
+            sendTelegramNotification(MarkdownV2(myNick .. '[' .. myid .. "] ГЇГҐГ°ГҐГ¤ГіГ¬Г Г« ГўГ»ГµГ®Г¤ГЁГІГј."))
         else
-            msg('Нет активной сессии для отмены.')
+            msg('ГЌГҐГІ Г ГЄГІГЁГўГ­Г®Г© Г±ГҐГ±Г±ГЁГЁ Г¤Г«Гї Г®ГІГ¬ГҐГ­Г».')
         end
     end)
 
@@ -673,11 +667,11 @@ function main()
 
     sampRegisterChatCommand('lrec',function(arg)
         if tonumber(arg) then
-            msg('Перезаходим через '.. arg ..' сек.')
+            msg('ГЏГҐГ°ГҐГ§Г ГµГ®Г¤ГЁГ¬ Г·ГҐГ°ГҐГ§ '.. arg ..' Г±ГҐГЄ.')
             arg = tonumber(arg) * 1000
             rec(arg)
         else
-            msg('Введите кол-во секунд.')
+            msg('Г‚ГўГҐГ¤ГЁГІГҐ ГЄГ®Г«-ГўГ® Г±ГҐГЄГіГ­Г¤.')
         end
     end)
 
@@ -686,21 +680,21 @@ function main()
     end)
 
     sampRegisterChatCommand('tghelp', function()
-        msg('Доступные команды:')
-        msg('/tgpanel - отправить панель управления в Telegram')
-        msg('/lrec [сек] - перезаход через указанное время')
-        msg('/stap - отменить выход')
-        msg('/qq - выйти из игры')
-        msg('/removeconfig - сбросить конфиг')
+        msg('Г„Г®Г±ГІГіГЇГ­Г»ГҐ ГЄГ®Г¬Г Г­Г¤Г»:')
+        msg('/tgpanel - Г®ГІГЇГ°Г ГўГЁГІГј ГЇГ Г­ГҐГ«Гј ГіГЇГ°Г ГўГ«ГҐГ­ГЁГї Гў Telegram')
+        msg('/lrec [Г±ГҐГЄ] - ГЇГҐГ°ГҐГ§Г ГµГ®Г¤ Г·ГҐГ°ГҐГ§ ГіГЄГ Г§Г Г­Г­Г®ГҐ ГўГ°ГҐГ¬Гї')
+        msg('/stap - Г®ГІГ¬ГҐГ­ГЁГІГј ГўГ»ГµГ®Г¤')
+        msg('/qq - ГўГ»Г©ГІГЁ ГЁГ§ ГЁГЈГ°Г»')
+        msg('/removeconfig - Г±ГЎГ°Г®Г±ГЁГІГј ГЄГ®Г­ГґГЁГЈ')
     end)
 
-    -- Запуск потока для Telegram
+    -- Г‡Г ГЇГіГ±ГЄ ГЇГ®ГІГ®ГЄГ  Г¤Г«Гї Telegram
     lua_thread.create(get_telegram_updates)
 
-    msg('CosyTelegram успешно загружен!')
-    msg('Используйте /tghelp для списка команд')
+    msg('CosyTelegram ГіГ±ГЇГҐГёГ­Г® Г§Г ГЈГ°ГіГ¦ГҐГ­!')
+    msg('Г€Г±ГЇГ®Г«ГјГ§ГіГ©ГІГҐ /tghelp Г¤Г«Гї Г±ГЇГЁГ±ГЄГ  ГЄГ®Г¬Г Г­Г¤')
 
-    -- Основной цикл
+    -- ГЋГ±Г­Г®ГўГ­Г®Г© Г¶ГЁГЄГ«
     while true do
         wait(0)
     end
